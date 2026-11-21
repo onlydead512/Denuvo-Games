@@ -1,0 +1,25 @@
+name: Automatic Backup to onlydead512
+
+on:
+  push:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Mirror branches and tags
+        env:
+          BACKUP_TOKEN: ${{ secrets.BACKUP_TOKEN }}
+          REPO_NAME: ${{ github.event.repository.name }}
+        run: |
+          git remote add backup "https://x-access-token:${BACKUP_TOKEN}@github.com/onlydead512/${REPO_NAME}.git"
+          git push --force --prune backup '+refs/heads/*:refs/heads/*' '+refs/tags/*:refs/tags/*'

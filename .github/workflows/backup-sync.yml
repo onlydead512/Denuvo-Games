@@ -15,11 +15,16 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Mirror branches and tags
         env:
           BACKUP_TOKEN: ${{ secrets.BACKUP_TOKEN }}
-          REPO_NAME: ${{ github.event.repository.name }}
         run: |
-          git remote add backup "https://x-access-token:${BACKUP_TOKEN}@github.com/onlydead512/${REPO_NAME}.git"
-          git push --force --prune backup '+refs/heads/*:refs/heads/*' '+refs/tags/*:refs/tags/*'
+          AUTH=$(printf 'x-access-token:%s' "$BACKUP_TOKEN" | base64 -w 0)
+
+          git -c http.https://github.com/.extraheader="AUTHORIZATION: basic $AUTH" \
+            push --force --prune \
+            "https://github.com/onlydead512/${GITHUB_REPOSITORY#*/}.git" \
+            '+refs/heads/*:refs/heads/*' \
+            '+refs/tags/*:refs/tags/*'
